@@ -1,10 +1,12 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-import os
+import os, jwt
 from flask.ext.restful import Resource, Api, reqparse
 
 from models import Users, Bucket, Items
-
+from flask import abort, request, jsonify, g
+from werkzeug.security import generate_password_hash, \
+     check_password_hash
 
 app = Flask(__name__)
 api = Api(app)
@@ -12,15 +14,45 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.debug = True
 db = SQLAlchemy(app)
+JWT_SECRET = 'secret'
+JWT_ALGORITHM = 'HS256
+
+def __init__(self, username, password):
+    self.username = username
+    self.set_password(password)
+    #retrieves password from hash
+def set_password(self, password):
+    self.pw_hash = generate_password_hash(password)
+def check_password(self, password):
+    return check_password_hash(self.pw_hash, password)
+def verify_user(user_name, password):
+    user= Users.query.filter_by(user_name).first()
+    if user.password is password:
+        return user
+    #generates token usingjwt
+def generate_token(Users):
+    data = {"user_id": user.id}
+    token = jwt.encode(data, JWT_PASS, JWT_ALGORITHM)
+    return token.decode('utf-8')
+
+
 
 class Users(Resource):
+
     def login():
         username = request.json.get(username)
         password = request.json.get(password)
         if username or password is none:
             abort(400, message = "cannot login without password or username")
-        elif
-        #check if password matches
+        elif password is not user.password:
+            abort(400, message = incorrect password)
+        else:
+            user = verify_user(user_name, password)
+            if user:
+                generate_token(Users)
+                return({"User_name": user.user_name, "auth_token":token}, 200)
+
+
     def register():
         username = request.json.get("username")
         password = request.json.get("password")

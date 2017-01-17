@@ -2,6 +2,17 @@ import unittest
 import json
 
 class TestBucket:
+     def setUp(self):
+        self.client = bucketlist.app.test_client()
+        login_dets = json.dumps({"email":
+                                          "angela.mugo@andela.com",
+                                          "password": "mugorocks"})
+        response = self.client.post('/auth/login',
+                                    data=login_dets,
+                                    content_type='application/json')
+
+        content = json.loads(response.get_data())
+        self.access_token = content['access_token']
     def test_creates_bucket(self):
         test_bucketlist = json.dumps({"bucket_title": "thisbucket"})
         #headers, insert auth here
