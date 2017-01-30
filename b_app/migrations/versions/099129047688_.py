@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: df82fb4239a7
+Revision ID: 099129047688
 Revises: 
-Create Date: 2017-01-25 19:38:45.191721
+Create Date: 2017-01-30 21:05:03.304283
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'df82fb4239a7'
+revision = '099129047688'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,25 +26,25 @@ def upgrade():
     sa.UniqueConstraint('username')
     )
     op.create_table('bucket',
-    sa.Column('bucket_id', sa.Integer(), nullable=False),
-    sa.Column('bucket_name', sa.String(length=200), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=200), nullable=False),
     sa.Column('date_created', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('date_modified', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['created_by'], ['users.user_id'], ),
-    sa.PrimaryKeyConstraint('bucket_id'),
-    sa.UniqueConstraint('bucket_name')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('items',
-    sa.Column('item_id', sa.Integer(), nullable=False),
-    sa.Column('item_name', sa.String(length=200), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=200), nullable=False),
     sa.Column('date_created', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('date_modified', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('bucket_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['bucket_id'], ['bucket.bucket_id'], ),
-    sa.PrimaryKeyConstraint('item_id'),
-    sa.UniqueConstraint('item_name')
+    sa.ForeignKeyConstraint(['bucket_id'], ['bucket.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     # ### end Alembic commands ###
 

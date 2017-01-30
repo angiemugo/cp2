@@ -1,5 +1,5 @@
-import jwt, json
-import os
+import jwt
+import os, json
 from flask import abort, request, jsonify, g
 from flask_restful import abort, Resource
 
@@ -11,21 +11,36 @@ from passlib.apps import custom_app_context as pwd_context
 JWT_PASS = os.environ["SECRET_KEY"]
 JWT_ALGORITHM = "HS256"
 
+
 def verify_user(username, password):
+    '''
+    checks for password given against password_hash to verify user
+    '''
     user = Users.query.filter_by(username=username).first()
-    if user and pwd_context.verify(password, self.password_hash):
-        g.user_id = user.id
+
+    if user and pwd_context.verify(password, user.password):
+        g.user_id = user.user_id
+
         return user
-#ipdb.set_trace()
+
+
 
 def gen_auth_token(user):
-    data = {"user_id": user.id}
+    '''
+    generates token once user is verified
+    '''
+    data = {"user_id": user.user_id}
+
     token = jwt.encode(data, JWT_PASS, JWT_ALGORITHM)
     return token.decode('utf-8')
 
-#login query database, get username and password, return token
+
+
 class Register(Resource):
     def post(self):
+        '''
+        takes in username and password to register user
+        '''
 
         username = request.json.get('username')
         password = request.json.get('password')
@@ -37,10 +52,7 @@ class Register(Resource):
             if user:
                 abort(400, mesage= "user already exists, choose another name")
             else:
-                #hash_password = pwd_context.encrypt(password)
-
                 user = Users(username, password)
-                # print("we are here")
                 db.session.add(user)
                 db.session.commit()
 
@@ -48,6 +60,9 @@ class Register(Resource):
 
 class Login(Resource):
     def post(self):
+        '''
+        takes in password and username to login existing user
+        '''
         username = request.json.get('username')
         password = request.json.get('password')
         if username is None  or password is None:
@@ -55,6 +70,6 @@ class Login(Resource):
         user = verify_user(username, password)
         if user:
             token = gen_auth_token(user)
-            return({"username": users.username, "token": token},200)
+            return({"username": user.username, "token": token},200)
         else:
             abort(401, message="Wrong username or password.")

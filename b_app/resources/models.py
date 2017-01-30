@@ -1,5 +1,10 @@
+from datetime import datetime
+
 from resources import db
 from passlib.apps import custom_app_context as pwd_context
+
+class ValidationError(ValueError):
+    pass
 
 
 
@@ -31,6 +36,13 @@ class Users(db.Model):
         self.username = username
         self.password = self.hash_password(password)
 
+    def __repr__(self):
+        """return string representation of user object
+        """
+        return self.username
+
+
+
 
 
 
@@ -38,18 +50,20 @@ class Users(db.Model):
 
 class Bucket(db.Model):
     __tablename__ = "bucket"
-    bucket_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    bucket_name = db.Column(db.String(200), nullable=False, unique=True)
-    bucket_items = db.relationship("Items", backref="items", lazy="dynamic",  cascade="all, delete-orphan")
-    date_created = db.Column(db.DateTime, server_default=db.func.now())
-    date_modified = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    items = db.relationship("Items", backref="items", lazy="dynamic",  cascade="all, delete-orphan")
+    date_created = db.Column(db.DateTime, default=datetime.utcnow())
+    date_modified = db.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     created_by = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+
+
 
 class Items(db.Model):
     __tablename__ = "items"
-    item_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    item_name = db.Column(db.String(200), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
     date_created = db.Column(db.DateTime, server_default=db.func.now())
     date_modified = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
-    bucket_id = db.Column(db.Integer, db.ForeignKey("bucket.bucket_id"), nullable=False)
-    status = db.Column(db.Boolean, nullable=False)
+    bucket_id = db.Column(db.Integer, db.ForeignKey("bucket.id"), nullable=False)
+    done = db.Column(db.Boolean, nullable=False)
