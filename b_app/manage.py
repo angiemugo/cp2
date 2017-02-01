@@ -1,6 +1,7 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Server, Manager, Shell
-from resources import app, db, models
+from resources.api import app, db
+from resources.models import Users, Bucket, Items
 
 
 migrate = Migrate(app, db)
@@ -15,7 +16,7 @@ manager.add_command("runserver", Server(
 
  # points the shell command to db and models
 def _make_context():
-    return dict(app=app, db=db, models=models)
+    return dict(app=app, db=db, Users=Users, Bucket=Bucket, Items=Items)
 
 manager.add_command("shell", Shell(make_context=_make_context))
 

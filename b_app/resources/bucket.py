@@ -3,7 +3,7 @@ import json
 import jwt,os
 
 from resources.models import Bucket, Items
-from resources import app, db
+from resources.api import app, db
 from flask import abort, request, g
 from flask_restful import abort, Resource, fields
 from flask_restful.reqparse import RequestParser
@@ -61,9 +61,22 @@ class Buckets(Resource):
         '''gets all bucketlists from database when id is none but gives one when id is chosen
         '''
         #implement query and pagination
+        parser = RequestParser()
+        parser.add_argument("limit", type=int, location="args")
+        parser.add_argument("offset", type=int, location="args")
+        parser.add_argument("q", type=str, location="args")
+        args = parser.parse_args()
+        limit = args.limit or 20
+        offset = args.offset
+        search_parameter = args.q
+
         if bucket_id is None:
-            all_bucketlists = Bucket.query.all()
-            return marshal(all_bucketlists, bucketlists_fields), 200
+            if search_parameter:
+                named_bucketlist = Bucket.query.filter_by(created_by=g.user_id, name=search_parameter).all()
+                return marshal(named_bucketlist, bucketlists_fields)
+            else:
+                all_bucketlists = Bucket.query.filter_by(created_by=g.user).limit(limit).offset(offset).all()
+                return marshal(all_bucketlists, bucketlists_fields), 200
 
         else:
             parser = RequestParser()
@@ -92,7 +105,7 @@ class Buckets(Resource):
                 db.session.commit()
                 return marshal(selected_blst, bucketlists_fields), 201
             except NoResultFound:
-                abort(404, message="the bucketlist you entered does not exist")
+                return({"message": "the bucketlist you entered does not exist"}, 404)
                 #delete earlier post, right not it's creating two
 
     @login_required
@@ -126,10 +139,16 @@ class Item(Resource):
         search_bucket = Bucket.query.filter_by(id=bucket_id, created_by=g.user).first()
 
         if search_bucket is not None:
-            item = Items(name=args.name, bucket_id=args.bucket_id, done=args.done)
-            db.session.add(item)
-            db.session.commit()
-            return marshal(item, items_fields), 201
+            duplicate_item = Items.query.filter_by(name=args.name).first()
+
+            if duplicate_item:
+                return({"message": " this item already exists in this bucketlist"}, 409)
+
+            else:
+                item = Items(name=args.name, bucket_id=args.bucket_id, done=args.done)
+                db.session.add(item)
+                db.session.commit()
+                return marshal(item, items_fields), 201
 
         else:
             return ({"message": "the bucketlist you chose does not exist"}, 404)
@@ -139,7 +158,6 @@ class Item(Resource):
         '''
         edits a specific item according to id provided
         '''
-
         parser=RequestParser()
         parser.add_argument('name', type=str, required=True)
         args=parser.parse_args()

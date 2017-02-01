@@ -4,7 +4,7 @@ from flask import abort, request, g
 from flask_restful import abort, Resource
 from flask_restful.reqparse import RequestParser
 
-from resources import app, db
+from resources.api import app, db
 from resources.models import Users
 from passlib.apps import custom_app_context as pwd_context
 #import ipdb
