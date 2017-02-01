@@ -3,10 +3,6 @@ from datetime import datetime
 from resources import db
 from passlib.apps import custom_app_context as pwd_context
 
-class ValidationError(ValueError):
-    pass
-
-
 
 class Users(db.Model):
     __tablename__ = "users"
@@ -18,16 +14,16 @@ class Users(db.Model):
 
 
     def hash_password(self, password):
-        '''hashes password
-        '''
+        """hashes password
+        """
         self.password_hash = pwd_context.encrypt(password)
         return self.password_hash
 
 
 
     def verify_password(self, password):
-        '''checks value given against password hash
-        '''
+        """checks value given against password hash
+        """
         return pwd_context.verify(password, self.password_hash)
 
 
