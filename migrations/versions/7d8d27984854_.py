@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 099129047688
+Revision ID: 7d8d27984854
 Revises: 
-Create Date: 2017-01-30 21:05:03.304283
+Create Date: 2017-02-02 22:21:32.548123
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '099129047688'
+revision = '7d8d27984854'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,8 +28,8 @@ def upgrade():
     op.create_table('bucket',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=200), nullable=False),
-    sa.Column('date_created', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
-    sa.Column('date_modified', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('date_created', sa.DateTime(), nullable=True),
+    sa.Column('date_modified', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['created_by'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -41,7 +41,7 @@ def upgrade():
     sa.Column('date_created', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('date_modified', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('bucket_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Boolean(), nullable=False),
+    sa.Column('done', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['bucket_id'], ['bucket.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')

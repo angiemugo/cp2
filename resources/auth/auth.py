@@ -1,13 +1,13 @@
 import jwt
 import os, json
+
 from flask import abort, request, g
 from flask_restful import abort, Resource
 from flask_restful.reqparse import RequestParser
-
-from resources.api import app, db
-from resources.models import Users
 from passlib.apps import custom_app_context as pwd_context
-#import ipdb
+
+from cp2.resources.api import app, db
+from cp2.resources.models import Users
 
 JWT_PASS = os.environ["SECRET_KEY"]
 JWT_ALGORITHM = "HS256"
@@ -52,6 +52,7 @@ class Register(Resource):
             abort(400, message="username or password cannot be blank")
         else:
             user = Users.query.filter_by(username=username).first()
+            print(user)
             if user:
                 abort(400, message= "user already exists, choose another name")
             else:
@@ -59,7 +60,7 @@ class Register(Resource):
                 db.session.add(user)
                 db.session.commit()
 
-                return("user successfully added", 200)
+                return("user successfully added", 201)
 
 class Login(Resource):
     def post(self):

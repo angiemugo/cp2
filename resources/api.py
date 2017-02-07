@@ -4,7 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 
-from resources.config import config
+from .config import config
 
 
 app = Flask(__name__)
@@ -14,16 +14,11 @@ api = Api(app)
 config_name = os.environ.get('APP_SETTINGS', 'default')
 app.config.from_object(config[config_name])
 
-# app.config["DEVELOPMENT"] = True
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ["DATABASE_URL"]
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-
 db = SQLAlchemy(app)
 
-from resources.models import *
-from resources.auth import Login, Register
-from resources.bucket import Buckets, Item
+from .models import Users, Bucket, Items
+from .auth.auth import Login, Register
+from .bucket.bucket import Buckets, Item
 
 api.add_resource(Login, '/auth/login', endpoint='login')
 api.add_resource(Register, '/auth/register', endpoint='register')

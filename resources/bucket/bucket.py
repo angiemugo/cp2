@@ -1,15 +1,17 @@
 #bucketlist-check if exists, then check for lack of name, define what it should look like(reqparse)
 import json
-import jwt,os
+import jwt, os
 
-from resources.models import Bucket, Items
-from resources.api import app, db
 from flask import abort, request, g
 from flask_restful import abort, Resource, fields
 from flask_restful.reqparse import RequestParser
 from sqlalchemy.orm.exc import NoResultFound
 from functools import wraps
-from resources.serializer import *
+
+from cp2.resources.models import Bucket, Items
+from cp2.resources.api import app, db
+from cp2.resources.serializer import *
+
 
 JWT_PASS = os.environ["SECRET_KEY"]
 JWT_ALGORITHM = "HS256"
@@ -47,14 +49,18 @@ class Buckets(Resource):
        parser = RequestParser()
        parser.add_argument("name", type=str, required=True)
        args = parser.parse_args()
+       if args.name is None:
+           return {"message": "bucket name cannot be empty"}, 400
+
        search_bucketlist = Bucket.query.filter_by(name=args.name).first()
        if search_bucketlist:
-           return {"message": "this bucket list already exists"}
+           return {"message": "this bucket list already exists"}, 400
+
        else:
            bucketlist = Bucket(name=args.name, created_by=g.user)
            db.session.add(bucketlist)
            db.session.commit()
-           return marshal(bucketlist, bucketlists_fields)
+           return marshal(bucketlist, bucketlists_fields), 201
 
     @login_required
     def get(self, bucket_id=None):
@@ -71,9 +77,11 @@ class Buckets(Resource):
         search_parameter = args.q
 
         if bucket_id is None:
+
             if search_parameter:
                 named_bucketlist = Bucket.query.filter_by(created_by=g.user_id, name=search_parameter).all()
                 return marshal(named_bucketlist, bucketlists_fields)
+
             else:
                 all_bucketlists = Bucket.query.filter_by(created_by=g.user).limit(limit).offset(offset).all()
                 return marshal(all_bucketlists, bucketlists_fields), 200
@@ -81,10 +89,10 @@ class Buckets(Resource):
         else:
             parser = RequestParser()
             parser.add_argument("bucket_id", type=int, required=True)
-            try:
-                search_bucket = Bucket.query.filter_by(id=bucket_id, created_by=g.user).first()
-                return marshal(search_bucket, bucketlists_fields)
-            except NoResultFound:
+            search_bucket = Bucket.query.filter_by(id=bucket_id, created_by=g.user).first()
+            if search_bucket:
+                return marshal(search_bucket, bucketlists_fields), 200
+            else:
                 return ({"message": "the bucketlist you chose does not exist"}, 404)
 
     @login_required
@@ -94,16 +102,19 @@ class Buckets(Resource):
         '''
         if bucket_id is None:
             return({"message": "no bucketlist selected"}, 401)
+
         else:
             parser=RequestParser()
             parser.add_argument('name', type=str, required=True)
             args=parser.parse_args()
+
             try:
                 selected_blst = Bucket.query.filter_by(id=bucket_id, created_by=g.user).first()#add for current user
                 #import ipdb; ipdb.set_trace()
                 selected_blst.name = args.name
                 db.session.commit()
                 return marshal(selected_blst, bucketlists_fields), 201
+
             except NoResultFound:
                 return({"message": "the bucketlist you entered does not exist"}, 404)
                 #delete earlier post, right not it's creating two
@@ -115,12 +126,15 @@ class Buckets(Resource):
         '''
         if bucket_id is None:
             return({"message": "no bucketlist selected"}, 401)
+
         else:
             some_blst = Bucket.query.filter_by(id=bucket_id, created_by=g.user).one()
+
             if some_blst:
                 db.session.delete(some_blst)
                 db.session.commit()
                 return ({"message":"the bucketlist was deleted"}, 200)
+
             else:
                 return ({"message": "the bucketlist you chose does not exist"}, 404)
 
@@ -181,7 +195,7 @@ class Item(Resource):
         if some_items:
             db.session.delete(some_items)
             db.session.commit()
-            return (some_items.id + "has been deleted")
+            return ("the item has been deleted")
 
         else:
             return ({"message": "the item you chose does not exist"}, 404)

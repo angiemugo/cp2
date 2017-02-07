@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from resources.api import db
 from passlib.apps import custom_app_context as pwd_context
+
+from .api import db
 
 
 class Users(db.Model):
