@@ -73,25 +73,23 @@ class TestBucket(TestSetUp):
             )
         self.assertEqual(response.status_code, 200)
 
-    def test_pagination(self):
-        '''
-        test that limit works and pagination
-        '''
-        #work on it first then test
-        pass
-    def test_update_success(self):
-        '''
-        test that a bucket can be updated
-        '''
-        new_bucket = json.dumps({'name': self.fakes.word()})
-        response = self.app.put(
-            '/bucketlists/1',
-            content_type="application/json",
-            headers={"Authorization": self.token},
-            data=new_bucket
-            )
-        self.assertEqual(response.status_code, 201)
-
+    # def test_pagination(self):
+    #     '''
+    #     test that limit works and pagination
+    #     '''
+    #     response = self.app.get(
+    #         '/bucketlists?page=1',
+    #         content_type="application/json",
+    #         headers={"Authorization": self.token}
+    #         )
+    #     self.assertEqual(response.status_code, 200)
+    #
+    #     response = self.app.get(
+    #         '/bucketlists?page=2',
+    #         content_type="application/json",
+    #         headers={"Authorization": self.token}
+    #         )
+    #     self.assertEqual(response.status_code, 200)
 
     def test_delete_success(self):
         '''

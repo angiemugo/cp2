@@ -1,4 +1,3 @@
-#bucketlist-check if exists, then check for lack of name, define what it should look like(reqparse)
 import json
 import jwt, os
 
@@ -66,32 +65,76 @@ class Buckets(Resource):
     def get(self, bucket_id=None):
         '''gets all bucketlists from database when id is none but gives one when id is chosen
         '''
-        #implement query and pagination
         parser = RequestParser()
         parser.add_argument("limit", type=int, location="args")
         parser.add_argument("offset", type=int, location="args")
         parser.add_argument("q", type=str, location="args")
         args = parser.parse_args()
-        limit = args.limit or 20
-        offset = args.offset
-        search_parameter = args.q
+        limit = request.args.get('limit') or 20
+        page = request.args.get('page')
+        search_parameter = request.args.get('q')
 
         if bucket_id is None:
-
+            '''
+            if no bucket id is specified, it returns all buckets
+            '''
             if search_parameter:
-                named_bucketlist = Bucket.query.filter_by(created_by=g.user_id, name=search_parameter).all()
-                return marshal(named_bucketlist, bucketlists_fields)
+                '''
+                if a search parameter is specified
+                '''
+                named_bucketlist = Bucket.query.filter_by(
+                    created_by=g.user_id, name=search_parameter).paginate(int(page), int(limit), False)
+                if named_bucketlist:
+                    if named_bucketlist.has_next:
+                        next_page = str(request.url_root) + \
+                        'bucketlists?q=' + q + '&page=' + str(int(page) + 1)
+
+                    else:
+                        next_page = 'None'
+
+                    if named_bucketlist.has_prev:
+                        prev_page= str(request.url_root) + 'bucketlists?q=' + \
+                        q + '&page=' + str(int(page) - 1)
+
+                    else:
+                        prev_page = 'None'
+
+                return {'bucketlists':marshal(named_bucketlist, bucketlists_fields),
+                        'next': next_page,'prev': prev_page}
 
             else:
-                all_bucketlists = Bucket.query.filter_by(created_by=g.user).limit(limit).offset(offset).all()
-                return marshal(all_bucketlists, bucketlists_fields), 200
+                '''
+                if no search parameter is specified
+                '''
+                all_bucketlists = Bucket.query.filter_by(created_by=g.user).paginate(int(page), int(limit), False)
+                if all_bucketlists.has_next:
+                    next_page = str(request.url_root) + \
+                    'bucketlists?' + 'page=' + str(int(page) + 1)
+
+                else:
+                    next_page = 'None'
+
+                if all_bucketlists.has_prev:
+                    prev_page = str(request.url_root) + \
+                    'bucketlicp2.' + 'page=' + str(int(page) - 1)
+
+                else:
+                    prev_page = 'None'
+
+
+                return {'bucketlists':marshal(all_bucketlists, bucketlists_fields),
+                        'next':next_page, 'previous':prev_page}
 
         else:
+            '''
+            if bucket id is specified
+            '''
             parser = RequestParser()
             parser.add_argument("bucket_id", type=int, required=True)
             search_bucket = Bucket.query.filter_by(id=bucket_id, created_by=g.user).first()
             if search_bucket:
                 return marshal(search_bucket, bucketlists_fields), 200
+
             else:
                 return ({"message": "the bucketlist you chose does not exist"}, 404)
 
@@ -110,14 +153,12 @@ class Buckets(Resource):
 
             try:
                 selected_blst = Bucket.query.filter_by(id=bucket_id, created_by=g.user).first()#add for current user
-                #import ipdb; ipdb.set_trace()
                 selected_blst.name = args.name
                 db.session.commit()
                 return marshal(selected_blst, bucketlists_fields), 201
 
             except NoResultFound:
                 return({"message": "the bucketlist you entered does not exist"}, 404)
-                #delete earlier post, right not it's creating two
 
     @login_required
     def delete(self, bucket_id=None):

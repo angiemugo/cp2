@@ -2,9 +2,7 @@ import json
 
 from faker import Faker
 
-from .test_setup import TestSetUp
-from cp2.resources.models import Bucket, Items, Users
-from cp2.resources.api import app, db
+from .test_setup import TestSetUp, Bucket, Items, Users, app, db
 
 class TestItem(TestSetUp):
     def test_create_item_success(self):

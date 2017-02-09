@@ -18,6 +18,8 @@ class TestSetUp(TestCase):
         self.username = self.fakes.user_name()
         self.password = self.fakes.password()
         self.bucket_name = self.fakes.word()
+        self.bucket_name1 = self.fakes.word()
+
         self.item_name = self.fakes.word()
 
         app.config.from_object(config['testing'])
@@ -34,7 +36,7 @@ class TestSetUp(TestCase):
         db.session.commit()
 
         self.existing_user = Users.query.filter_by(username=self.username).one()
-
+        #go the login way instead shortcut
         self.token = gen_auth_token(self.existing_user)
 
         test_bucket = Bucket(name=self.bucket_name, created_by = self.existing_user.user_id, id=1)

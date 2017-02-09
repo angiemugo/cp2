@@ -50,12 +50,12 @@ class TestLogin(TestSetUp):
     def test_login_fails_when_does_not_exist(self):
         response = self.app.post(
             '/auth/login',
-            content_type="application/json",
             data=json.dumps({"username":"angela", "password":"nzdsiibfjsh"})
             )
         self.assertEqual(response.status_code, 401)
 
     def test_token_created(self):
+        #test it starts out with a certain string
         response = self.app.post(
             '/auth/login',
             content_type = "application/json",
