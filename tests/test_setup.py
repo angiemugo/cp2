@@ -3,10 +3,10 @@ import os
 from unittest import TestCase
 from faker import Faker
 
-from cp2.resources.api import app, db
-from cp2.resources.models import Users, Bucket, Items
-from cp2.resources.config import config
-from cp2.resources.auth.auth import gen_auth_token
+from resources.api import app, db
+from resources.models import Users, Bucket, Items
+from resources.config import config
+from resources.auth.auth import gen_auth_token
 
 
 class TestSetUp(TestCase):
@@ -49,6 +49,6 @@ class TestSetUp(TestCase):
 
 
 
-    def tearDown(self):
+    def tearDown(se
         db.session.remove()
         db.drop_all()

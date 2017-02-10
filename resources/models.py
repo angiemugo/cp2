@@ -3,7 +3,7 @@ from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
 
 from .api import db
-
+# model name should be singular
 
 class Users(db.Model):
     __tablename__ = "users"

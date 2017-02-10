@@ -6,8 +6,8 @@ from flask_restful import abort, Resource
 from flask_restful.reqparse import RequestParser
 from passlib.apps import custom_app_context as pwd_context
 
-from cp2.resources.api import app, db
-from cp2.resources.models import Users
+from resources.api import app, db
+from resources.models import Users
 
 JWT_PASS = os.environ["SECRET_KEY"]
 JWT_ALGORITHM = "HS256"
