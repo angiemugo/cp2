@@ -1,5 +1,5 @@
 from .test_setup import TestSetUp
-from cp2.resources.models import Users
+from cp2.resources.models import User
 from cp2.resources.api import app, db
 import json
 

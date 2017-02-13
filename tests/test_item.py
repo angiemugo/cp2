@@ -2,7 +2,7 @@ import json
 
 from faker import Faker
 
-from .test_setup import TestSetUp, Bucket, Items, Users, app, db
+from .test_setup import TestSetUp, Bucket, Item, User, app, db
 
 class TestItem(TestSetUp):
     def test_create_item_success(self):
