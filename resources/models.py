@@ -3,7 +3,13 @@ from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
 
 from .api import db
-# model name should be singular
+
+class Base(db.Model):
+    __abstract__ = True
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    date_created = db.Column(db.DateTime, server_default=db.func.now())
+    date_modified = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
 class User(db.Model):
     __tablename__ = "users"
@@ -33,21 +39,13 @@ class User(db.Model):
         return self.username
 
 
-class Bucket(db.Model):
+class Bucket(Base):
     __tablename__ = "bucket"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(200), nullable=False, unique=True)
     items = db.relationship("Item", backref="items", lazy="dynamic",  cascade="all, delete-orphan")
-    date_created = db.Column(db.DateTime, default=datetime.utcnow())
-    date_modified = db.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     created_by = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
 
 
-class Item(db.Model):
-    __tablename__ = "items"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(200), nullable=False, unique=True)
-    date_created = db.Column(db.DateTime, server_default=db.func.now())
-    date_modified = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+class Item(Base):
+    __tablename__ = "item"
     bucket_id = db.Column(db.Integer, db.ForeignKey("bucket.id"), nullable=False)
     done = db.Column(db.Boolean, nullable=False)

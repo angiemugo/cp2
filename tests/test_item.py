@@ -42,23 +42,9 @@ class TestItem(TestSetUp):
         self.assertEqual(response.status_code, 400)
 
     def test_delete_item(self):
-        new_item = json.dumps({'name':self.fakes.word()})
         response = self.app.delete(
             '/bucketlists/1/items/1',
             content_type="application/json",
             headers={"Authorization": self.token}
-            )
-        self.assertEqual(response.status_code, 200)
-
-    def test_update_success(self):
-        '''
-        test that a bucket can be updated
-        '''
-        new_item = json.dumps({'name': self.fakes.word()})
-        response = self.app.put(
-            '/bucketlists/1/items/1',
-            content_type="application/json",
-            headers={"Authorization": self.token},
-            data=new_item
             )
         self.assertEqual(response.status_code, 200)

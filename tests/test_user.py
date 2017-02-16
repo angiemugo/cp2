@@ -44,7 +44,7 @@ class TestLogin(TestSetUp):
             content_type="application/json",
             data=json.dumps({"username":self.username})
             )
-        self.assertEqual(response.status_code, 400)#wrong error code
+        self.assertEqual(response.status_code, 400)
 
 
     def test_login_fails_when_does_not_exist(self):
@@ -52,7 +52,7 @@ class TestLogin(TestSetUp):
             '/auth/login',
             data=json.dumps({"username":"angela", "password":"nzdsiibfjsh"})
             )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
 
     def test_token_created(self):
         #test it starts out with a certain string

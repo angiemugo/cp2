@@ -2,14 +2,14 @@ import json
 import jwt, os
 
 from flask import abort, request, g
-from flask_restful import abort, Resource, fields
+from flask_restful import abort, Resource, fields, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy.orm.exc import NoResultFound
 from functools import wraps
 
 from resources.models import Bucket, Item
 from resources.api import app, db
-from resources.serializer import *
+from resources.serializer import items_fields, bucketlists_fields
 
 
 JWT_PASS = os.environ["SECRET_KEY"]
@@ -50,7 +50,7 @@ class Buckets(Resource):
        parser = RequestParser()
        parser.add_argument("name", type=str, required=True)
        args = parser.parse_args()
-       if args.name is None:
+       if not args.name:
            return {"message": "bucket name cannot be empty"}, 400
 
        search_bucketlist = Bucket.query.filter_by(name=args.name).first()
@@ -64,83 +64,79 @@ class Buckets(Resource):
            return marshal(bucketlist, bucketlists_fields), 201
 
     @login_required
-    def get(self, bucket_id=None):
+    def get(self):
         '''gets all bucketlists from database when id is none but gives one when id is chosen
         '''
         limit = request.args.get('limit') or 20
         page = request.args.get('page') or 1
-        search_parameter = request.args.get('q')
-        if not bucket_id :
+        q = request.args.get('q')
+        '''
+        if no bucket id is specified, it returns all buckets
+        '''
+        if q:
             '''
-            if no bucket id is specified, it returns all buckets
+            if a search parameter is specified
             '''
-            if search_parameter:
+            named_bucketlist = Bucket.query.filter(
+                Bucket.name.ilike('%'+q+'%')
+            ).filter_by(
+                created_by=g.user_id
+            ).paginate(
+                int(page), int(limit)
+            )
+
+            bucketitems = named_bucketlist.items
+            if not named_bucketlist:
+                if named_bucketlist.has_next:
+                    next_page = str(request.url_root) + \
+                    'bucketlists?q=' + q + '&page=' + str(int(page) + 1) + \
+                    '&&limit=' + str(int(limit))
+                else:
+                    next_page = 'None'
+                if named_bucketlist.has_prev:
+                    prev_page= str(request.url_root) + 'bucketlists?q=' + \
+                    q + '&page=' + str(int(page) - 1)
+                else:
+                    prev_page = 'None'
+                buckets = [bucket for bucket in bucketitems]
+                return {'bucketlists':marshal(buckets, bucketlists_fields),
+                    'next': next_page,'prev': prev_page}
+            else:
+                return {"message": "No bucketlist match was found"}, 404
+        else:
                 '''
-                if a search parameter is specified
+                if no search parameter is specified
                 '''
-                named_bucketlist = Bucket.query.filter_by(
-                    created_by=g.user_id, name=search_parameter)\
-                .paginate(int(page), int(limit))
-                bucketitems = named_bucketlist.items
-                if named_bucketlist is not None:
-                    if named_bucketlist.has_next:
+                all_bucketlists = Bucket.query.filter_by(
+                    created_by=g.user).paginate(int(page), int(limit))
+                bucketlists = all_bucketlists.items
+                print(bucketlists)
+                if all_bucketlists:
+                    if all_bucketlists.has_next:
                         next_page = str(request.url_root) + \
-                        'bucketlists?q=' + q + '&page=' + str(int(page) + 1) + \
+                        'bucketlists?' + 'page=' + str(int(page) + 1) +\
                         '&&limit=' + str(int(limit))
                     else:
                         next_page = 'None'
-                    if named_bucketlist.has_prev:
-                        prev_page= str(request.url_root) + 'bucketlists?q=' + \
-                        q + '&page=' + str(int(page) - 1)
+                    if all_bucketlists.has_prev:
+                        prev_page = str(request.url_root) + \
+                        'bucketlists?' + 'page=' + str(int(page) - 1) + \
+                        '&&limit=' + str(int(limit))
                     else:
                         prev_page = 'None'
-                    buckets = [bucket for bucket in bucketitems]
-                    return {'bucketlists':marshal(buckets, bucketlists_fields),
-                        'next': next_page,'prev': prev_page}
+                    buckets = [bucket for bucket in bucketlists]
+                    return {"bucketlists": marshal(buckets,
+                bucketlists_fields), 'next':next_page, 'previous':prev_page}
                 else:
-                    return {"message": "No bucketlist match was found"}, 404
-            else:
-                    '''
-                    if no search parameter is specified
-                    '''
-                    all_bucketlists = Bucket.query.filter_by(
-                        created_by=g.user).paginate(int(page), int(limit))
-                    bucketlists = all_bucketlists.items
-                    if all_bucketlists is not None:
-                        if all_bucketlists.has_next:
-                            next_page = str(request.url_root) + \
-                            'bucketlists?' + 'page=' + str(int(page) + 1) +\
-                            '&&limit=' + str(int(limit))
-                        else:
-                            next_page = 'None'
-                        if all_bucketlists.has_prev:
-                            prev_page = str(request.url_root) + \
-                            'bucketlists?' + 'page=' + str(int(page) - 1) + \
-                            '&&limit=' + str(int(limit))
-                        else:
-                            prev_page = 'None'
-                        buckets = [bucket for bucket in bucketlists]
-                        return {"bucketlists": marshal(buckets,
-                    bucketlists_fields), 'next':next_page, 'previous':prev_page}
-                    else:
-                        return {"message": "no bucketlists available"}, 404
-        else:
-            '''
-            if bucket id is specified
-            '''
-            search_bucket = Bucket.query.filter_by(id=bucket_id,
-                                                   created_by=g.user).first()
-            if search_bucket is not None:
-                return marshal(search_bucket, bucketlists_fields), 200
-            else:
-                return {"message": "the bucketlist you chose does not exist"}, 404
+                    return {"message": "no bucketlists available"}, 404
+
 
     @login_required
     def put(self, bucket_id=None):
         '''
             edits a specific bucketlist according to id provided
         '''
-        if bucket_id is None:
+        if not bucket_id:
             return {"message": "no bucketlist selected"}, 401
         else:
             parser=RequestParser()
@@ -151,7 +147,7 @@ class Buckets(Resource):
                                                        created_by=g.user).first()
                 selected_blst.name = args.name
                 db.session.commit()
-                return marshal(selected_blst, bucketlists_fields), 201
+                return marshal(selected_blst, bucketlists_fields), 200
             except NoResultFound:
                 return {"message": "the bucketlist you entered does not exist"}, 404
 
@@ -160,7 +156,7 @@ class Buckets(Resource):
         '''
         deletes a bucketlist given an id
         '''
-        if bucket_id is None:
+        if not bucket_id:
             return {"message": "no bucketlist selected"}, 401
         else:
             some_blst = Bucket.query.filter_by(id=bucket_id, created_by=g.user).one()
@@ -183,7 +179,7 @@ class Items(Resource):
         args=parser.parse_args()
         search_bucket = Bucket.query.filter_by(id=bucket_id,
                                                created_by=g.user).first()
-        if search_bucket is not None:
+        if not search_bucket:
             # import ipdb; ipdb.set_trace()
             duplicate_item = Item.query.filter_by(name=args.name).first()
             if duplicate_item:
@@ -193,6 +189,18 @@ class Items(Resource):
                 db.session.add(item)
                 db.session.commit()
                 return marshal(item, items_fields), 201
+        else:
+            return {"message": "the bucketlist you chose does not exist"}, 404
+
+    @login_required
+    def get(self, bucket_id=None):
+        '''
+        if bucket id is specified
+        '''
+        search_bucket = Bucket.query.filter_by(id=bucket_id,
+                                               created_by=g.user).first()
+        if search_bucket:
+            return marshal(search_bucket, bucketlists_fields), 200
         else:
             return {"message": "the bucketlist you chose does not exist"}, 404
 
@@ -208,7 +216,7 @@ class Items(Resource):
         selected_item = Item.query.filter_by(id=item_id).first()
         selected_item.name = args.name
         selected_item.done = args.done
-        if selected_item is not None:
+        if not selected_item:
             db.session.commit()
             return marshal(selected_item, items_fields)
         else:

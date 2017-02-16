@@ -23,6 +23,6 @@ from .bucket.bucket import Buckets, Items
 api.add_resource(Login, '/auth/login', endpoint='login')
 api.add_resource(Register, '/auth/register', endpoint='register')
 api.add_resource(Buckets, '/bucketlists/', endpoint='bucketlists')
-api.add_resource(Buckets, '/bucketlists/<bucket_id>', endpoint='bucketlist')
+api.add_resource(Items, '/bucketlists/<bucket_id>', endpoint='bucketlist')
 api.add_resource(Items, '/bucketlists/<bucket_id>/items/', endpoint='items')
 api.add_resource(Items, '/bucketlists/<bucket_id>/items/<item_id>', endpoint='item')
