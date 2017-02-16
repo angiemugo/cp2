@@ -55,7 +55,8 @@ class Register(Resource):
                 user = User(username=username, password=password)
                 db.session.add(user)
                 db.session.commit()
-                return "user successfully added", 201
+                user_added = user.username
+                return {"username":user_added}, 201
 
 
 class Login(Resource):
