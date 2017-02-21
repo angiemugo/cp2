@@ -70,9 +70,6 @@ class Buckets(Resource):
         limit = request.args.get('limit') or 20
         page = request.args.get('page') or 1
         q = request.args.get('q')
-        '''
-        if no bucket id is specified, it returns all buckets
-        '''
         if q:
             '''
             if a search parameter is specified
@@ -86,7 +83,7 @@ class Buckets(Resource):
             )
 
             bucketitems = named_bucketlist.items
-            if not named_bucketlist:
+            if named_bucketlist:
                 if named_bucketlist.has_next:
                     next_page = str(request.url_root) + \
                     'bucketlists?q=' + q + '&page=' + str(int(page) + 1) + \
