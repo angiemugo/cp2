@@ -1,0 +1,5 @@
+test cannot access protected routes
+create- test success, test cannot create without name, with same name
+read- can only read one's, read without id, read successfully
+update - success, update with no name
+delete - success
